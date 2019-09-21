@@ -9,7 +9,12 @@ from zope.interface import implementer
 from .interfaces import IEggStorage
 
 import pkg_resources
-import pip
+
+try:
+    from pip import main as pipmain
+except:
+    from pip._internal import main as pipmain
+
 
 @implementer(IEggStorage)
 class FilesystemEggStorage(object):
@@ -26,8 +31,8 @@ class FilesystemEggStorage(object):
             copyfileobj(eggfile, f)
         try:
             d = next(pkg_resources.find_distributions(eggpath))
-            for r in d.requires(): # install_requires of setup.py
-                pip.main(['install',r.__str__()])
+            for r in d.requires():  # install_requires of setup.py
+                pipmain(['install', r.__str__()])
         except StopIteration:
             # raise ValueError("Unknown or corrupt egg")
             # tests can't pass
@@ -43,8 +48,8 @@ class FilesystemEggStorage(object):
 
     def list(self, project):
         eggdir = path.join(self.basedir, project)
-        versions = [path.splitext(path.basename(x))[0] \
-            for x in glob("%s/*.egg" % eggdir)]
+        versions = [path.splitext(path.basename(x))[0]
+                    for x in glob("%s/*.egg" % eggdir)]
         return sorted(versions, key=LooseVersion)
 
     def delete(self, project, version=None):
@@ -52,7 +57,7 @@ class FilesystemEggStorage(object):
             rmtree(path.join(self.basedir, project))
         else:
             remove(self._eggpath(project, version))
-            if not self.list(project): # remove project if no versions left
+            if not self.list(project):  # remove project if no versions left
                 self.delete(project)
 
     def _eggpath(self, project, version):
