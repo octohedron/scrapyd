@@ -1,6 +1,6 @@
 import re
 from glob import glob
-from os import path, makedirs, remove
+from os import path, makedirs, remove, system
 from shutil import copyfileobj, rmtree
 from distutils.version import LooseVersion
 
@@ -9,11 +9,6 @@ from zope.interface import implementer
 from .interfaces import IEggStorage
 
 import pkg_resources
-
-try:
-    from pip import main as pipmain
-except:
-    from pip._internal import main as pipmain
 
 
 @implementer(IEggStorage)
@@ -32,7 +27,8 @@ class FilesystemEggStorage(object):
         try:
             d = next(pkg_resources.find_distributions(eggpath))
             for r in d.requires():  # install_requires of setup.py
-                pipmain(['install', r.__str__()])
+                cmd = 'pip install ' + r.__str__()
+                system(cmd)
         except StopIteration:
             # raise ValueError("Unknown or corrupt egg")
             # tests can't pass
